@@ -70,6 +70,10 @@ sample_submission = pd.read_csv('data/sample_submission.csv')
 # num_col = ['Age', 'DurationOfPitch']
 ob_col = ['TypeofContact', 'Occupation',
           'Gender', 'ProductPitched', 'MaritalStatus', 'Designation']
+ic(train['Gender'])
+
+train.replace('Fe Male', 'Female')
+ic(train['Gender'])
 
 for col, dtype in train.dtypes.items():
     if dtype == 'object':
@@ -83,7 +87,6 @@ for col, dtype in train.dtypes.items():
         train.loc[:,col] = train[col].fillna(value)
         test.loc[:,col] = test[col].fillna(value)
 # print(train.isna().sum())
-# ic(train)
 
 encoder = LabelEncoder()
 encoder.fit(train['TypeofContact'])
@@ -112,12 +115,15 @@ x_train = train.drop(columns=['ProdTaken'])
 y_train = train[['ProdTaken']]
 
 model.fit(x_train,y_train)
-print(model.score(x_train, y_train))
+ic(model.score(x_train, y_train).round(3))
 
-prediction = model.predict(test)
-print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
-print(prediction[:10])
+# prediction = model.predict(test)
+# print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
+# print(prediction[:10])
 
-sample_submission['ProdTaken'] = prediction
-ic(sample_submission.head())
-sample_submission.to_csv('submission.csv',index = False)
+# result = model.score(test, prediction)
+# ic('model.score:', result) 
+
+# sample_submission['ProdTaken'] = prediction
+# ic(sample_submission.head())
+# sample_submission.to_csv('submission.csv',index = False)
