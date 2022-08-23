@@ -103,9 +103,9 @@ for col in ob_col:
 corr_df = train.corr()
 corr_df = corr_df.apply(lambda x: round(x ,2))
 pd.set_option('display.max_columns',None)
-# ic(corr_df)
+ic(corr_df)
 ax = sns.heatmap(corr_df, annot=True, annot_kws=dict(color='g'), cmap='Greys')
-# plt.savefig('corr.png')
+plt.savefig('corr.png')
 
 model = RandomForestClassifier()
 train = train.drop(columns=['id'])
@@ -126,4 +126,4 @@ ic(model.score(x_train, y_train).round(3))
 
 # sample_submission['ProdTaken'] = prediction
 # ic(sample_submission.head())
-# sample_submission.to_csv('submission.csv',index = False)
+# sample_submission.to_csv('submission5.csv',index = False)
