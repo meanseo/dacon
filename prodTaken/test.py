@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 import numpy as np
+from sklearn.preprocessing import StandardScaler # 정규화
 
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 
 import seaborn as sns
-
+from sklearn.preprocessing import minmax_scale
 '''
 id : 샘플 아이디
 Age : 나이
@@ -66,27 +67,35 @@ sample_submission = pd.read_csv('data/sample_submission.csv')
 # ic(train.info())
 # ic(plt.hist(train.ProdTaken))
 # ic(plt.show())
-# ic(train.isna().sum())
+ic(train.isna().sum())
 # num_col = ['Age', 'DurationOfPitch']
+
 ob_col = ['TypeofContact', 'Occupation',
           'Gender', 'ProductPitched', 'MaritalStatus', 'Designation']
-ic(train['Gender'])
 
-train.replace('Fe Male', 'Female')
-ic(train['Gender'])
+# pandas의 fillna 메소드를 활용하여 NAN 값을 채워니다.
+# 0 으로 채우는 경우
+train['DurationOfPitch'] = train['DurationOfPitch'].fillna(0)
+test['DurationOfPitch'] = test['DurationOfPitch'].fillna(0)
 
-for col, dtype in train.dtypes.items():
-    if dtype == 'object':
-        # 문자형 칼럼의 경우 'Unknown'을 채워줍니다.
-        value = 'Unknown'
-        train.loc[:,col] = train[col].fillna(value)
-        test.loc[:,col] = test[col].fillna(value)
-    elif dtype == int or dtype == float:
-        # 수치형 칼럼의 경우 0을 채워줍니다.
-        value = 0
-        train.loc[:,col] = train[col].fillna(value)
-        test.loc[:,col] = test[col].fillna(value)
-# print(train.isna().sum())
+# mean 값으로 채우는 경우
+mean_cols = ['Age','NumberOfFollowups','PreferredPropertyStar','NumberOfTrips','NumberOfChildrenVisiting','MonthlyIncome']
+for col in mean_cols:
+    train[col] = train[col].fillna(train[col].mean())
+    test[col] = test[col].fillna(test[col].mean())
+    train[col] = minmax_scale(train[col])
+    test[col] = minmax_scale(test[col])
+
+# "Unknown"으로 채우는 경우
+
+train['TypeofContact'] = train['TypeofContact'].fillna("Unknown")
+test['TypeofContact'] = test['TypeofContact'].fillna("Unknown")
+
+
+# 결과를 확인합니다.
+
+
+print(train.isna().sum())
 
 encoder = LabelEncoder()
 encoder.fit(train['TypeofContact'])
@@ -97,15 +106,15 @@ for col in ob_col:
     encoder.fit(train[col])
     train[col] = encoder.transform(train[col])
     test[col] = encoder.transform(test[col])
-# ic(train)
+ic(train)
 # ic(test)
 
-corr_df = train.corr()
-corr_df = corr_df.apply(lambda x: round(x ,2))
-pd.set_option('display.max_columns',None)
-ic(corr_df)
-ax = sns.heatmap(corr_df, annot=True, annot_kws=dict(color='g'), cmap='Greys')
-plt.savefig('corr.png')
+# corr_df = train.corr()
+# corr_df = corr_df.apply(lambda x: round(x ,2))
+# pd.set_option('display.max_columns',None)
+# # ic(corr_df)
+# ax = sns.heatmap(corr_df, annot=True, annot_kws=dict(color='g'), cmap='Greys')
+# # plt.savefig('corr.png')
 
 model = RandomForestClassifier()
 train = train.drop(columns=['id'])
@@ -117,13 +126,13 @@ y_train = train[['ProdTaken']]
 model.fit(x_train,y_train)
 ic(model.score(x_train, y_train).round(3))
 
-# prediction = model.predict(test)
-# print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
-# print(prediction[:10])
+prediction = model.predict(test)
+print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
+print(prediction[:10])
 
-# result = model.score(test, prediction)
-# ic('model.score:', result) 
+result = model.score(test, prediction)
+ic('model.score:', result) 
 
-# sample_submission['ProdTaken'] = prediction
-# ic(sample_submission.head())
-# sample_submission.to_csv('submission5.csv',index = False)
+sample_submission['ProdTaken'] = prediction
+ic(sample_submission.head())
+sample_submission.to_csv('submission7.csv',index = False)
