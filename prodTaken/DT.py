@@ -10,7 +10,8 @@ import hyperopt
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 
 train = pd.read_csv('data/train.csv')
 test = pd.read_csv('data/test.csv')
@@ -63,37 +64,22 @@ from sklearn.model_selection import train_test_split
 from sklearn import model_selection
 x_train,x_val,y_train,y_val = train_test_split(x, y, train_size=0.8, shuffle=True, random_state=42)
 
-grid_params = {
-    'n_neighbors' : list(range(1,20)),
-    'weights' : ["uniform", "distance"],
-    'metric' : ['euclidean', 'manhattan', 'minkowski']
-}
+# model = DecisionTreeClassifier(random_state=42)
+# grid_params = {'min_impurity_decrease': np.arange(0.0001, 0.001, 0.0001),
+#           'max_depth': range(5, 20, 1),
+#           'min_samples_split': range(2, 100, 10)
+#           }
 
 # from sklearn.model_selection import GridSearchCV
-# knn_clf  = KNeighborsClassifier()
-# gs_s = GridSearchCV(knn_clf, grid_params, cv=10)
+# gs_s = GridSearchCV(model, grid_params, cv=10)
 # gs_s.fit(x_train, y_train)
 
 # print("Best Parameters : ", gs_s.best_params_)
 # print("Best Score : ", gs_s.best_score_)
 # print("Best Test Score : ", gs_s.score(x_train, y_train))
 
-
-knn_clf  = KNeighborsClassifier(metric= 'manhattan', n_neighbors= 6, weights= 'distance')
+knn_clf  = DecisionTreeClassifier(max_depth= 5, min_impurity_decrease= 0.0001, min_samples_split= 72, random_state=42)
 knn_clf.fit(x_train, y_train)
 preds = knn_clf.predict(x_val)
 # pred_proba = best_xg.predict_proba(x_val)[:, 1]
 ic('score:', accuracy_score(preds, y_val))
-
-
-# knn_clf.fit(x,y)
-# pred = knn_clf.predict(test)
-# print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
-# print(pred[:10])
-
-# result = knn_clf.score(test, pred)
-# ic('model.score:', result) 
-
-# sample_submission['ProdTaken'] = pred
-# ic(sample_submission.head())
-# sample_submission.to_csv('submission/submission_knn.csv',index = False)

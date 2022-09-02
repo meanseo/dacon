@@ -5,12 +5,9 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import seaborn as sns
 from sklearn.metrics import accuracy_score
-from xgboost import XGBClassifier 
+import xgboost as xgb
 import hyperopt
-from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
+
 
 train = pd.read_csv('data/train.csv')
 test = pd.read_csv('data/test.csv')
@@ -20,14 +17,26 @@ ob_col = ['TypeofContact', 'Occupation',
             'Gender', 'ProductPitched', 'MaritalStatus', 'Designation']
 train.replace('Fe Male', 'Female')
 
+# corr_df = train.corr()
+# corr_df = corr_df.apply(lambda x: round(x ,2))
+# pd.set_option('display.max_columns',None)
+# # ic(corr_df)
+# ax = sns.heatmap(corr_df, annot=True, annot_kws=dict(color='g'), cmap='Greys')
+# # plt.savefig('corr.png')
+
 drop_col = ['NumberOfPersonVisiting','NumberOfChildrenVisiting', 'id', 'NumberOfTrips','NumberOfFollowups', 'OwnCar', 'MonthlyIncome'] 
 train = train.drop(columns=drop_col)
 test = test.drop(columns=drop_col)
 
-# pandas의 fillna 메소드를 활용하여 NAN 값 채움
+# pandas의 fillna 메소드를 활용하여 NAN 값을 채워니다.
 # 0 으로 채우는 경우
 train.DurationOfPitch = train.DurationOfPitch.fillna(0)
 test.DurationOfPitch = test.DurationOfPitch.fillna(0)
+# train.NumberOfFollowups = train.NumberOfFollowups.fillna(0)
+# test.NumberOfFollowups = test.NumberOfFollowups.fillna(0)
+
+# train.MonthlyIncome = train.MonthlyIncome.fillna(0)
+# test.MonthlyIncome = test.MonthlyIncome.fillna(0)
 
 # mean 값으로 채우는 경우
 mean_cols = ['Age', 'PreferredPropertyStar']
@@ -39,6 +48,11 @@ for col in mean_cols:
 train.TypeofContact = train.TypeofContact.fillna("Unknown")
 test.TypeofContact = test.TypeofContact.fillna("Unknown")
 
+# 결과를 확인합니다.
+train.isna().sum()
+test.isna().sum()
+
+
 encoder = LabelEncoder()
 encoder.fit(train['TypeofContact'])
 encoder.transform(train['TypeofContact'])
@@ -48,59 +62,64 @@ for col in ob_col:
     encoder.fit(train[col])
     train[col] = encoder.transform(train[col])
     test[col] = encoder.transform(test[col])
+# ic(train)
+# ic(test)
 
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import RobustScaler
 scaler = RobustScaler()
 scaler.fit(train[['Age', 'DurationOfPitch', 'PreferredPropertyStar']])
 
+# train[['Age', 'DurationOfPitch']] = scaler.transform(train[['Age', 'DurationOfPitch']])
+# test[['Age', 'DurationOfPitch']] = scaler.transform(test[['Age', 'DurationOfPitch']])
+
 train[['Age', 'DurationOfPitch', 'PreferredPropertyStar']] = scaler.transform(train[['Age', 'DurationOfPitch', 'PreferredPropertyStar']])
 test[['Age', 'DurationOfPitch', 'PreferredPropertyStar']] = scaler.transform(test[['Age', 'DurationOfPitch', 'PreferredPropertyStar']])
+# ic(train)
+# test
 
 x = train.drop(columns=['ProdTaken'])
 y = train['ProdTaken']
 
 from sklearn.model_selection import train_test_split
-from sklearn import model_selection
-x_train,x_val,y_train,y_val = train_test_split(x, y, train_size=0.8, shuffle=True, random_state=42)
+# x_train,x_val,y_train,y_val = train_test_split(x, y, train_size=0.8, shuffle=True, random_state=42)
 
-rf = RandomForestClassifier(n_estimators=250, max_depth=15, random_state=42)
-xgb = XGBClassifier(max_depth=14, n_estimators=250,
-                    colsample_bylevel=0.8, 
-                    colsample_bytree= 0.9, random_state=42)
-knn  = KNeighborsClassifier(metric= 'manhattan', n_neighbors= 6, weights= 'distance')
+from catboost import CatBoostClassifier
+from sklearn.model_selection import GridSearchCV
+# cbc = CatBoostClassifier(verbose = 200)
 
-lr_final = LogisticRegression(C=10)
+# parameters = param_cat = {"depth" : [11,12,13,15],
+#           "iterations" : [1000, 1100, 1200, 1300],
+#           "learning_rate" : [0.001, 0.005], 
+#           "l2_leaf_reg" : [2],
+#           "border_count" : [254]
+#           }
+# Grid_CBC = GridSearchCV(estimator=cbc, param_grid = parameters, cv = 5, n_jobs=-1)
+# Grid_CBC.fit(x_train, y_train)
 
-rf.fit(x_train, y_train)
-xgb.fit(x_train, y_train)
-knn.fit(x_train, y_train)
+# print(Grid_CBC.best_params_)
+# print(Grid_CBC.best_score_)
 
-knn_pred = knn.predict(x_val)
-xgb_pred = xgb.predict(x_val)
-rf_pred = rf.predict(x_val)
+# cbc = CatBoostClassifier(border_count= 254, depth= 10, iterations= 1000, l2_leaf_reg= 2, learning_rate= 0.01, random_state=42)
+cbc = CatBoostClassifier(border_count= 254, depth= 11, iterations= 1300, l2_leaf_reg= 2, learning_rate= 0.05, random_state=42)
+# cbc.fit(x_train,y_train)
+# val_predict = cbc.predict(x_val) 
+# from sklearn import metrics 
+# print('정확도 :', metrics.accuracy_score(y_val, val_predict))
 
-print('KNN 정확도: {0:.4f}'.format(accuracy_score(y_val, knn_pred)))
-print('랜덤 포레스트 정확도: {0:.4f}'.format(accuracy_score(y_val, rf_pred)))
-print('xgb 정확도: {0:.4f}'.format(accuracy_score(y_val, xgb_pred)))
-
-pred = np.array([knn_pred, rf_pred, xgb_pred])
-print(pred.shape)
-
-pred = np.transpose(pred)
-print(pred.shape)
-
-lr_final.fit(pred, y_val)
-final = lr_final.predict(pred)
-
-print('최종 메타 모델의 예측 정확도: {0:.4f}'.format(accuracy_score(y_val , final)))
-
-lr_final.fit(x,y)
-pred = model.predict(test)
+cbc.fit(x,y)
+pred = cbc.predict(test)
 print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
 print(pred[:10])
 
-result = model.score(test, pred)
+result = cbc.score(test, pred)
 ic('model.score:', result) 
+
 sample_submission['ProdTaken'] = pred
 ic(sample_submission.head())
-sample_submission.to_csv('submission/submission_xgboost_param2.csv',index = False)
+sample_submission.to_csv('submission/submission_catboost.csv',index = False)
+
+'''
+정확도 : 0.928388746803069
+데이콘 : 0.91815
+'''

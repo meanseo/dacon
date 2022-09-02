@@ -1,3 +1,4 @@
+from random import random
 import pandas as pd
 from icecream import ic
 import matplotlib.pyplot as plt
@@ -13,8 +14,6 @@ train = pd.read_csv('data/train.csv')
 test = pd.read_csv('data/test.csv')
 sample_submission = pd.read_csv('data/sample_submission.csv')
 
-ob_col = ['TypeofContact', 'Occupation',
-            'Gender', 'ProductPitched', 'MaritalStatus', 'Designation']
 train.replace('Fe Male', 'Female')
 
 # 상관계수
@@ -52,12 +51,8 @@ test.TypeofContact = test.TypeofContact.fillna("Unknown")
 # 결과를 확인
 # print(train.isna().sum())
 # print(test.isna().sum())
-
-
-encoder = LabelEncoder()
-encoder.fit(train['TypeofContact'])
-encoder.transform(train['TypeofContact'])
-
+ob_col = ['TypeofContact', 'Occupation',
+            'Gender', 'ProductPitched', 'MaritalStatus', 'Designation']
 for col in ob_col:
     encoder = LabelEncoder()
     encoder.fit(train[col])
@@ -127,7 +122,7 @@ from sklearn.model_selection import cross_val_score
 #               'colsample_bytree' : round(params['colsample_bytree'], 5),
 #               'colsample_bylevel' : round(params['colsample_bylevel'], 5)
 #               }
-#     xgb_clf = XGBClassifier(n_estimators=250, max_depth=10, **params) 
+#     xgb_clf = XGBClassifier(n_estimators=250, max_depth=14, **params) 
 #     best_score = cross_val_score(xgb_clf, x_train, y_train, 
 #                                  scoring='accuracy', 
 #                                  cv=5, 
@@ -143,21 +138,21 @@ from sklearn.model_selection import cross_val_score
 
 model = XGBClassifier(max_depth=14, n_estimators=250,
                     colsample_bylevel=0.8, 
-                    colsample_bytree= 0.9,
+                    colsample_bytree= 0.9, random_state=42
 )
 
-model.fit(x_train, y_train)
-preds = model.predict(x_val)
-# pred_proba = best_xg.predict_proba(x_val)[:, 1]
-ic('score:', accuracy_score(preds, y_val))
+# model.fit(x_train, y_train)
+# preds = model.predict(x_val)
+# # pred_proba = best_xg.predict_proba(x_val)[:, 1]
+# ic('score:', accuracy_score(preds, y_val))
 
-# model.fit(x,y)
-# pred = model.predict(test)
-# print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
-# print(pred[:10])
+model.fit(x,y)
+pred = model.predict(test)
+print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
+print(pred[:10])
 
-# result = model.score(test, pred)
-# ic('model.score:', result) 
-# sample_submission['ProdTaken'] = pred
-# ic(sample_submission.head())
-# sample_submission.to_csv('submission/submission_xgboost_param2.csv',index = False)
+result = model.score(test, pred)
+ic('model.score:', result) 
+sample_submission['ProdTaken'] = pred
+ic(sample_submission.head())
+sample_submission.to_csv('./submission.csv',index = False)
