@@ -163,17 +163,32 @@ pred_proba = xgb_wrapper.predict_proba(x_val)[:, 1]
 
 get_clf_eval(y_val, preds, pred_proba)
 
+
+
+
 # print('정확도 :', accuracy_score(y_val, val_predict))
 # print(model.score(x_val,y_val))
 # print(model.score(x_val,val_predict))
-
 # xgb_wrapper.fit(x,y)
 # pred = xgb_wrapper.predict(test)
 # print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
 # print(pred[:10])
 
-# result = xgb_wrapper.score(test, pred)
-# ic('model.score:', result) 
-# sample_submission['ProdTaken'] = pred
+
+
+# evals = [(x, y)]
+# xgb_wrapper.fit(x, y, early_stopping_rounds=50, eval_metric='logloss',
+#                 eval_set=evals,
+#                 verbose=True)
+
+# preds = xgb_wrapper.predict(test)
+# pred_proba = xgb_wrapper.predict_proba(test)[:, 1]
+
+# ic(pred_proba)
+# # get_clf_eval(y_val, preds, pred_proba)
+
+# # result = xgb_wrapper.score(test, preds)
+# # ic('model.score:', result) 
+# sample_submission['ProdTaken'] = preds
 # ic(sample_submission.head())
-# sample_submission.to_csv('submission/submission_param3.csv',index = False)
+# sample_submission.to_csv('submission/submission_wrapper.csv',index = False)
