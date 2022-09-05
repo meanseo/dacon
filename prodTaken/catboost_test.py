@@ -82,7 +82,7 @@ x = train.drop(columns=['ProdTaken'])
 y = train['ProdTaken']
 
 from sklearn.model_selection import train_test_split
-# x_train,x_val,y_train,y_val = train_test_split(x, y, train_size=0.8, shuffle=True, random_state=42)
+x_train,x_val,y_train,y_val = train_test_split(x, y, train_size=0.8, shuffle=True, random_state=42)
 
 from catboost import CatBoostClassifier
 from sklearn.model_selection import GridSearchCV
@@ -90,7 +90,7 @@ from sklearn.model_selection import GridSearchCV
 
 # parameters = param_cat = {"depth" : [11,12,13,15],
 #           "iterations" : [1000, 1100, 1200, 1300],
-#           "learning_rate" : [0.001, 0.005], 
+#           "learning_rate" : [0.001, 0.05], 
 #           "l2_leaf_reg" : [2],
 #           "border_count" : [254]
 #           }
@@ -102,24 +102,24 @@ from sklearn.model_selection import GridSearchCV
 
 # cbc = CatBoostClassifier(border_count= 254, depth= 10, iterations= 1000, l2_leaf_reg= 2, learning_rate= 0.01, random_state=42)
 cbc = CatBoostClassifier(border_count= 254, depth= 11, iterations= 1300, l2_leaf_reg= 2, learning_rate= 0.05, random_state=42)
-# cbc.fit(x_train,y_train)
-# val_predict = cbc.predict(x_val) 
-# from sklearn import metrics 
-# print('정확도 :', metrics.accuracy_score(y_val, val_predict))
+cbc.fit(x_train,y_train)
+val_predict = cbc.predict(x_val) 
+from sklearn import metrics 
+print('정확도 :', metrics.accuracy_score(y_val, val_predict))
 
-cbc.fit(x,y)
-pred = cbc.predict(test)
-print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
-print(pred[:10])
+# cbc.fit(x,y)
+# pred = cbc.predict(test)
+# print('----------------------예측된 데이터의 상위 10개의 값 확인--------------------\n')
+# print(pred[:10])
 
-result = cbc.score(test, pred)
-ic('model.score:', result) 
+# result = cbc.score(test, pred)
+# ic('model.score:', result) 
 
-sample_submission['ProdTaken'] = pred
-ic(sample_submission.head())
-sample_submission.to_csv('submission/submission_catboost.csv',index = False)
+# sample_submission['ProdTaken'] = pred
+# ic(sample_submission.head())
+# sample_submission.to_csv('submission/submission_catboost.csv',index = False)
 
 '''
 정확도 : 0.928388746803069
-데이콘 : 0.91815
+데이콘 : 0.92613
 '''

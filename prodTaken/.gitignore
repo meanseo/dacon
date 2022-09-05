@@ -1,0 +1,5 @@
+.idea
+.catboost_info
+.submission
+__pycache
+figure
